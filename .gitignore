@@ -1,0 +1,11 @@
+# Cloudflare Tunnel Secrets
+.env
+.env.local
+.env.*.local
+.claude
+
+# Credentials files (if using cert-based auth instead of token)
+*.pem
+*.cert
+*.key
+credentials.json
