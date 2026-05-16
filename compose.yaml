@@ -1,12 +1,12 @@
 services:
   cloudflared:
-    image: cloudflare/cloudflared:2024.12.1
+    image: cloudflare/cloudflared:latest
     container_name: cloudflared-ssh-tunnel
     restart: unless-stopped
     network_mode: host
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    command: tunnel run
+    command: tunnel --protocol http2 run
     healthcheck:
       test: ["CMD", "cloudflared", "--version"]
       interval: 30s

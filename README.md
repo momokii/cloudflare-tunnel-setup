@@ -263,7 +263,7 @@ Expected output: Status should be `Up` or `Up (healthy)`
 ### 2. Verify Tunnel Connection
 
 ```bash
-docker compose logs cloudflared | grep "connected"
+docker compose logs cloudflared | grep "Registered tunnel connection"
 ```
 
 ### 3. Verify SSH Service on Host
@@ -331,6 +331,17 @@ sudo ss -tlnp | grep :22
 2. Ensure your email/account matches the allow policy
 3. Check if additional authentication factors are required
 
+### Tunnel Connections Keep Timing Out ("no recent network activity")
+
+**Symptom:** Logs show repeated `Registered tunnel connection` followed by `timeout: no recent network activity` every ~70 seconds, tunnel appears offline in Cloudflare dashboard
+
+**Cause:** QUIC protocol uses UDP, which gets dropped by some ISP routers, NATs, or firewalls after a short idle period
+
+**Solution:** The compose file uses `--protocol http2` to force TCP connections instead. If you removed this flag, add it back:
+```yaml
+command: tunnel --protocol http2 run
+```
+
 ### Update Cloudflared Image
 
 ```bash
@@ -346,7 +357,7 @@ docker compose up -d
 |------|------------|---------|
 | `.env` | **DO NOT COMMIT** | Contains your actual tunnel token |
 | `.env.example` | Safe to commit | Template with placeholder values |
-| `docker-compose.yml` | Safe to commit | References `${TUNNEL_TOKEN}` from .env |
+| `compose.yaml` | Safe to commit | References `${TUNNEL_TOKEN}` from .env |
 
 ### Best Practices
 
@@ -375,7 +386,8 @@ No host filesystem mounts are required for token-based authentication.
 
 ### Container Configuration
 
-- **Image**: `cloudflare/cloudflared:2024.12.1` (pinned for stability)
+- **Image**: `cloudflare/cloudflared:latest` (auto-updates with `docker compose pull`)
+- **Protocol**: `http2` (TCP) — avoids QUIC/UDP timeout issues on restrictive networks
 - **Network Mode**: `host` - allows container to reach host SSH on `localhost:22`
 - **Restart**: `unless-stopped` - auto-restart on failure/reboot
 - **Authentication**: Token-based (no credentials file needed)
